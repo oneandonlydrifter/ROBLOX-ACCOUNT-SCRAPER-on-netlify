@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Account Lookup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+
+        .header {
+            background: #343a40;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            padding: 40px;
+            background: white;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-weight: 500;
+        }
+
+        .search-btn:hover {
+            background: #0056b3;
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0072ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            padding: 0 40px 40px;
+        }
+
+        .user-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .username {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status.online {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status.in-game {
+            background: #FF9800;
+            color: white;
+        }
+
+        .status.offline {
+            background: #757575;
+            color: white;
+        }
+
+        .status.in-studio {
+            background: #9C27B0;
+            color: white;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .detail-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 3px solid #007bff;
+        }
+
+        .detail-card h3 {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-card p {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .current-game {
+            background: #28a745;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .current-game h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .game-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-top: 20px;
+        }
+
+        .error h3 {
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: unset;
+            }
+            
+            .user-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Roblox Account Lookup</h1>
+            <p>Search for any Roblox user and view their profile information</p>
+        </div>
+        
+        <div class="search-section">
+            <div class="search-form">
+                <input type="text" class="search-input" id="usernameInput" placeholder="Enter Roblox username..." />
+                <button class="search-btn" id="searchBtn" onclick="searchUser()">Search</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching for user...</p>
+        </div>
+
+        <div id="results" class="results" style="display: none;">
+            <!-- Results will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+        const API_BASE = 'https://users.roblox.com/v1';
+        const PRESENCE_API = 'https://presence.roblox.com/v1';
+        const THUMBNAILS_API = 'https://thumbnails.roblox.com/v1';
+        const GAMES_API = 'https://games.roblox.com/v1';
+
+        // Helper function to make CORS-safe requests
+        async function corsRequest(url, options = {}) {
+            const proxyUrl = CORS_PROXY + encodeURIComponent(url);
+            return fetch(proxyUrl, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                }
+            });
+        }
+
+        // Allow enter key to search
+        document.getElementById('usernameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchUser();
+            }
+        });
+
+        async function searchUser() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) {
+                alert('Please enter a username');
+                return;
+            }
+
+            showLoading();
+            
+            try {
+                // Step 1: Get user ID from username
+                const userResponse = await corsRequest(`${API_BASE}/usernames/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        usernames: [username]
+                    })
+                });
+
+                const userData = await userResponse.json();
+                
+                if (!userData.data || userData.data.length === 0) {
+                    showError('User not found', 'The username you entered does not exist on Roblox.');
+                    return;
+                }
+
+                const user = userData.data[0];
+                const userId = user.id;
+
+                // Step 2: Get detailed user info
+                const [detailsResponse, presenceResponse, avatarResponse] = await Promise.all([
+                    corsRequest(`${API_BASE}/users/${userId}`),
+                    corsRequest(`${PRESENCE_API}/presence/users`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userIds: [userId]
+                        })
+                    }),
+                    corsRequest(`${THUMBNAILS_API}/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=true`)
+                ]);
+
+                const details = await detailsResponse.json();
+                const presence = await presenceResponse.json();
+                const avatar = await avatarResponse.json();
+
+                // Get game info if user is in a game
+                let gameInfo = null;
+                if (presence.userPresences && presence.userPresences[0] && presence.userPresences[0].placeId) {
+                    try {
+                        const gameResponse = await corsRequest(`${GAMES_API}/games/multiget-place-details`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                placeIds: [presence.userPresences[0].placeId]
+                            })
+                        });
+                        const gameData = await gameResponse.json();
+                        if (gameData && gameData.length > 0) {
+                            gameInfo = gameData[0];
+                        }
+                    } catch (e) {
+                        console.log('Could not fetch game info:', e);
+                    }
+                }
+
+                displayResults(details, presence.userPresences[0], avatar.data[0], gameInfo);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Search Failed', 'An error occurred while searching. Please try again.');
+            }
+        }
+
+        function displayResults(userDetails, presence, avatar, gameInfo) {
+            const resultsDiv = document.getElementById('results');
+            const joinDate = new Date(userDetails.created).toLocaleDateString();
+            
+            let statusClass = 'offline';
+            let statusText = 'Offline';
+            
+            if (presence) {
+                switch (presence.userPresenceType) {
+                    case 1:
+                        statusClass = 'online';
+                        statusText = 'Online';
+                        break;
+                    case 2:
+                        statusClass = 'in-game';
+                        statusText = 'In Game';
+                        break;
+                    case 3:
+                        statusClass = 'in-studio';
+                        statusText = 'In Studio';
+                        break;
+                    default:
+                        statusClass = 'offline';
+                        statusText = 'Offline';
+                }
+            }
+
+            let currentGameHtml = '';
+            if (gameInfo && presence && presence.userPresenceType === 2) {
+                currentGameHtml = `
+                    <div class="current-game">
+                        <h3>Currently Playing</h3>
+                        <div class="game-name">${gameInfo.name}</div>
+                        <p>Started playing: ${formatLastOnline(presence.lastOnline)}</p>
+                    </div>
+                `;
+            }
+
+            resultsDiv.innerHTML = `
+                <div class="user-card">
+                    <div class="user-header">
+                        <img src="${avatar.imageUrl}" alt="Avatar" class="avatar">
+                        <div class="user-info">
+                            <h2>${userDetails.displayName}</h2>
+                            <div class="username">@${userDetails.name}</div>
+                            <span class="status ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                    
+                    ${currentGameHtml}
+                    
+                    <div class="details-grid">
+                        <div class="detail-card">
+                            <h3>User ID</h3>
+                            <p>${userDetails.id}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>Join Date</h3>
+                            <p>${joinDate}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>Description</h3>
+                            <p>${userDetails.description || 'No description provided'}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>Last Online</h3>
+                            <p>${presence ? formatLastOnline(presence.lastOnline) : 'Unknown'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('loading').style.display = 'none';
+            resultsDiv.style.display = 'block';
+        }
+
+        function formatLastOnline(dateString) {
+            if (!dateString) return 'Unknown';
+            
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+            if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+            if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('searchBtn').disabled = true;
+        }
+
+        function showError(title, message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="error">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+            
+            document.getElementById('loading').style.display = 'none';
+            resultsDiv.style.display = 'block';
+            document.getElementById('searchBtn').disabled = false;
+        }
+
+        // Re-enable search button when loading is done
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('searchBtn').disabled = false;
+        }
+    </script>
+</body>
+</html>
