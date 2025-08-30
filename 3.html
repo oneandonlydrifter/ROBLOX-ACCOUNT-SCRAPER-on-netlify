@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Account Lookup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+
+        .header {
+            background: #343a40;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            padding: 40px;
+            background: white;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-weight: 500;
+        }
+
+        .search-btn:hover {
+            background: #0056b3;
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            padding: 0 40px 40px;
+        }
+
+        .user-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .username {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status.online {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status.in-game {
+            background: #FF9800;
+            color: white;
+        }
+
+        .status.offline {
+            background: #757575;
+            color: white;
+        }
+
+        .status.unknown {
+            background: #6c757d;
+            color: white;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .detail-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 3px solid #007bff;
+        }
+
+        .detail-card h3 {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .detail-card p {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .badges-section {
+            margin-top: 25px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #e9ecef;
+            color: #495057;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin: 4px;
+            font-weight: 500;
+        }
+
+        .badge.premium {
+            background: #ffd700;
+            color: #856404;
+        }
+
+        .badge.verified {
+            background: #007bff;
+            color: white;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-top: 20px;
+        }
+
+        .error h3 {
+            margin-bottom: 10px;
+        }
+
+        .info-section {
+            background: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .info-section h4 {
+            color: #0c5aa6;
+            margin-bottom: 10px;
+        }
+
+        .info-section p {
+            color: #0c5aa6;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: unset;
+            }
+            
+            .user-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Roblox Account Lookup</h1>
+            <p>Advanced profile information and statistics</p>
+        </div>
+        
+        <div class="search-section">
+            <div class="search-form">
+                <input type="text" class="search-input" id="usernameInput" placeholder="Enter Roblox username or User ID..." />
+                <button class="search-btn" id="searchBtn" onclick="searchUser()">Search</button>
+            </div>
+            
+            <div class="info-section">
+                <h4>What you can find:</h4>
+                <p>• Basic profile information (username, display name, join date)<br>
+                • Account creation details and user ID<br>
+                • Profile description and verification status<br>
+                • Avatar thumbnail and account age<br>
+                • Premium membership status (when available)</p>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching for user information...</p>
+        </div>
+
+        <div id="results" class="results" style="display: none;">
+            <!-- Results will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Use multiple API sources for better reliability
+        const ROBLOX_API = 'https://users.roblox.com/v1';
+        const THUMBNAILS_API = 'https://thumbnails.roblox.com/v1';
+        
+        // Multiple CORS proxies for fallback
+        const PROXIES = [
+            'https://api.codetabs.com/v1/proxy/?quest=',
+            'https://cors-anywhere.herokuapp.com/',
+            'https://api.allorigins.win/raw?url='
+        ];
+
+        let currentProxyIndex = 0;
+
+        async function makeRequest(url, options = {}) {
+            for (let i = 0; i < PROXIES.length; i++) {
+                try {
+                    const proxy = PROXIES[currentProxyIndex];
+                    const proxyUrl = proxy + encodeURIComponent(url);
+                    
+                    const response = await fetch(proxyUrl, {
+                        ...options,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            ...options.headers
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        return response;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                } catch (error) {
+                    console.log(`Proxy ${currentProxyIndex} failed:`, error);
+                    currentProxyIndex = (currentProxyIndex + 1) % PROXIES.length;
+                    
+                    if (i === PROXIES.length - 1) {
+                        throw error;
+                    }
+                }
+            }
+        }
+
+        // Allow enter key to search
+        document.getElementById('usernameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchUser();
+            }
+        });
+
+        async function searchUser() {
+            const input = document.getElementById('usernameInput').value.trim();
+            if (!input) {
+                alert('Please enter a username or User ID');
+                return;
+            }
+
+            showLoading();
+            
+            try {
+                let userId;
+                let userDetails;
+
+                // Check if input is a number (User ID)
+                if (/^\d+$/.test(input)) {
+                    userId = parseInt(input);
+                    // Get user details directly by ID
+                    try {
+                        const response = await makeRequest(`${ROBLOX_API}/users/${userId}`);
+                        userDetails = await response.json();
+                    } catch (e) {
+                        showError('User not found', 'No user found with that User ID.');
+                        return;
+                    }
+                } else {
+                    // Search by username
+                    try {
+                        const response = await makeRequest(`${ROBLOX_API}/usernames/users`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                usernames: [input]
+                            })
+                        });
+                        
+                        const userData = await response.json();
+                        
+                        if (!userData.data || userData.data.length === 0) {
+                            showError('User not found', 'No user found with that username.');
+                            return;
+                        }
+                        
+                        userId = userData.data[0].id;
+                        
+                        // Get detailed user info
+                        const detailsResponse = await makeRequest(`${ROBLOX_API}/users/${userId}`);
+                        userDetails = await detailsResponse.json();
+                        
+                    } catch (e) {
+                        showError('Search failed', 'Unable to search for that username. Try using the User ID instead.');
+                        return;
+                    }
+                }
+
+                // Get avatar thumbnail
+                let avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?userId=${userId}&width=150&height=150&format=png`;
+                try {
+                    const avatarResponse = await makeRequest(`${THUMBNAILS_API}/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`);
+                    const avatarData = await avatarResponse.json();
+                    if (avatarData.data && avatarData.data[0] && avatarData.data[0].imageUrl) {
+                        avatarUrl = avatarData.data[0].imageUrl;
+                    }
+                } catch (e) {
+                    console.log('Using fallback avatar URL');
+                }
+
+                displayResults(userDetails, avatarUrl);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Search Failed', 'An error occurred while searching. The Roblox API might be temporarily unavailable.');
+            }
+        }
+
+        function displayResults(userDetails, avatarUrl) {
+            const resultsDiv = document.getElementById('results');
+            const joinDate = new Date(userDetails.created);
+            const accountAge = Math.floor((Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
+            
+            // Determine verification status
+            let badges = [];
+            if (userDetails.hasVerifiedBadge) {
+                badges.push('<span class="badge verified">Verified</span>');
+            }
+            if (userDetails.isPremium) {
+                badges.push('<span class="badge premium">Premium</span>');
+            }
+
+            const badgesHtml = badges.length > 0 ? `<div class="badges-section">${badges.join('')}</div>` : '';
+
+            resultsDiv.innerHTML = `
+                <div class="user-card">
+                    <div class="user-header">
+                        <img src="${avatarUrl}" alt="Avatar" class="avatar" onerror="this.src='https://www.roblox.com/headshot-thumbnail/image?userId=${userDetails.id}&width=150&height=150&format=png'">
+                        <div class="user-info">
+                            <h2>${userDetails.displayName || userDetails.name}</h2>
+                            <div class="username">@${userDetails.name}</div>
+                            <span class="status unknown">Status Unknown</span>
+                            ${badgesHtml}
+                        </div>
+                    </div>
+                    
+                    <div class="details-grid">
+                        <div class="detail-card">
+                            <h3>User ID</h3>
+                            <p>${userDetails.id}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>Join Date</h3>
+                            <p>${joinDate.toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            })}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>Account Age</h3>
+                            <p>${formatAccountAge(accountAge)}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>Display Name</h3>
+                            <p>${userDetails.displayName || 'Same as username'}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>Description</h3>
+                            <p>${userDetails.description || 'No description provided'}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>External Display Name</h3>
+                            <p>${userDetails.externalAppDisplayName || 'Not set'}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>Profile Visibility</h3>
+                            <p>${userDetails.isBanned ? 'Banned Account' : 'Active Account'}</p>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3>Verification Status</h3>
+                            <p>${userDetails.hasVerifiedBadge ? 'Verified Account' : 'Not Verified'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section" style="margin-top: 25px;">
+                        <h4>Note about real-time data:</h4>
+                        <p>Due to API limitations, online status and current game information are not available through this tool. For the most up-to-date activity, visit the user's profile directly on Roblox.</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('loading').style.display = 'none';
+            resultsDiv.style.display = 'block';
+        }
+
+        function formatAccountAge(days) {
+            const years = Math.floor(days / 365);
+            const remainingDays = days % 365;
+            const months = Math.floor(remainingDays / 30);
+            
+            if (years > 0) {
+                if (months > 0) {
+                    return `${years} year${years !== 1 ? 's' : ''}, ${months} month${months !== 1 ? 's' : ''}`;
+                }
+                return `${years} year${years !== 1 ? 's' : ''}`;
+            } else if (months > 0) {
+                return `${months} month${months !== 1 ? 's' : ''}`;
+            }
+            return `${days} day${days !== 1 ? 's' : ''}`;
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('searchBtn').disabled = true;
+        }
+
+        function showError(title, message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="error">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+            
+            document.getElementById('loading').style.display = 'none';
+            resultsDiv.style.display = 'block';
+            document.getElementById('searchBtn').disabled = false;
+        }
+
+        // Re-enable search button when loading is done
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('searchBtn').disabled = false;
+        }
+    </script>
+</body>
+</html>
